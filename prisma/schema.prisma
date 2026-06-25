@@ -1,0 +1,145 @@
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Stage {
+  DESIGN      // 1. วิเคราะห์ & ออกแบบ (ต้นน้ำ)
+  MATERIAL    // 2. สร้างสื่อ & ใบงาน (กลางน้ำ)
+  FACILITATE  // 3. จัดกิจกรรมในชั้นเรียน (กลางน้ำ)
+  ASSESS      // 4. ประเมิน & ป้อนกลับ (ปลายน้ำ)
+  REFLECT     // 5. สะท้อนคิด & ต่อยอด (ปลายน้ำ)
+}
+
+enum Subject {
+  THAI
+  SCIENCE
+  SOCIAL
+  CROSS
+}
+
+enum SkillFocus {
+  RL
+  CT
+  BOTH
+}
+
+enum Grade {
+  M1
+  M2
+  M3
+  M1_3
+}
+
+model User {
+  id             String     @id @default(cuid())
+  email          String     @unique
+  emailVerified  DateTime?
+  name           String?
+  image          String?
+  googleSub      String?    @unique
+  role           Role       @default(USER)
+  createdAt      DateTime   @default(now())
+  lastLoginAt    DateTime?
+
+  loginLogs      LoginLog[]
+  ratings        Rating[]
+  promptsCreated Prompt[]   @relation("PromptCreatedBy")
+
+  // NextAuth required relations
+  accounts       Account[]
+  sessions       Session[]
+}
+
+model LoginLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  loginAt   DateTime @default(now())
+  ipAddress String?
+  userAgent String?
+
+  @@index([userId])
+}
+
+model Prompt {
+  id            String     @id @default(cuid())
+  title         String
+  text          String     @db.Text
+  stage         Stage
+  subject       Subject
+  skill         SkillFocus
+  grade         Grade
+  copyCount     Int        @default(0) // เพิ่มทุกครั้งที่ user login กดคัดลอกสำเร็จ — core field ของ MVP
+  createdById   String
+  createdBy     User       @relation("PromptCreatedBy", fields: [createdById], references: [id])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  ratings       Rating[]
+
+  @@index([stage])
+  @@index([subject])
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  userId    String
+  promptId  String
+  value     Int      // 1-5, บังคับกรอก
+  comment   String?  @db.VarChar(200) // ความเห็นสั้น ๆ ประกอบดาว — optional
+  isHidden  Boolean  @default(false)  // admin soft-hide คอมเมนต์ที่ไม่เหมาะสม (ดาวยังมีผลเหมือนเดิม)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prompt    Prompt   @relation(fields: [promptId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, promptId])
+  @@index([promptId])
+}
+
+// ----- NextAuth.js required models (Prisma Adapter) -----
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
