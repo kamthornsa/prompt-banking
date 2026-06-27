@@ -52,6 +52,23 @@ enum Grade {
   M1_3
 }
 
+enum TeachingSubject {
+  THAI        // ภาษาไทย
+  MATH        // คณิตศาสตร์
+  SCIENCE     // วิทยาศาสตร์และเทคโนโลยี
+  SOCIAL      // สังคมศึกษาฯ
+  HEALTH_PE   // สุขศึกษาและพลศึกษา
+  ART         // ศิลปะ
+  CAREER_TECH // การงานอาชีพ
+  FOREIGN_LANG // ภาษาต่างประเทศ
+  OTHER       // อื่นๆ
+}
+
+enum ShowcaseType {
+  IMAGE   // อัปโหลดรูปภาพไปยัง MinIO
+  LINK    // ลิงก์ภายนอก (Google Drive, Canva, OneDrive)
+}
+
 model User {
   id                   String               @id @default(cuid())
   email                String               @unique
@@ -61,12 +78,18 @@ model User {
   googleSub            String?              @unique
   role                 Role                 @default(USER)
   authorRequestStatus  AuthorRequestStatus?
+  slug                 String?              @unique // URL ของ profile เช่น /u/somchai
+  bio                  String?              @db.VarChar(300)
+  school               String?              @db.VarChar(200)
+  teachingSubjects     TeachingSubject[]
   createdAt            DateTime             @default(now())
   lastLoginAt          DateTime?
 
-  loginLogs      LoginLog[]
-  ratings        Rating[]
-  promptsCreated Prompt[]   @relation("PromptCreatedBy")
+  loginLogs        LoginLog[]
+  ratings          Rating[]
+  promptsCreated   Prompt[]         @relation("PromptCreatedBy")
+  showcases        Showcase[]       @relation("ShowcaseCreatedBy")
+  showcaseRatings  ShowcaseRating[]
 
   // NextAuth required relations
   accounts       Account[]
@@ -100,6 +123,7 @@ model Prompt {
   updatedAt     DateTime   @updatedAt
 
   ratings       Rating[]
+  showcases     Showcase[]
 
   @@index([stage])
   @@index([subject])
@@ -120,6 +144,44 @@ model Rating {
 
   @@unique([userId, promptId])
   @@index([promptId])
+}
+
+model Showcase {
+  id          String       @id @default(cuid())
+  promptId    String
+  authorId    String
+  title       String
+  description String?      @db.VarChar(300)
+  type        ShowcaseType
+  imageKey    String?      // MinIO object key (สำหรับ IMAGE หรือ thumbnail ของ LINK)
+  externalUrl String?      // ต้องมีถ้า type=LINK
+  isHidden    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  prompt   Prompt           @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  author   User             @relation("ShowcaseCreatedBy", fields: [authorId], references: [id])
+  ratings  ShowcaseRating[]
+
+  @@index([promptId])
+  @@index([authorId])
+}
+
+model ShowcaseRating {
+  id         String   @id @default(cuid())
+  userId     String
+  showcaseId String
+  value      Int      // 1-5
+  comment    String?  @db.VarChar(200)
+  isHidden   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  showcase Showcase @relation(fields: [showcaseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, showcaseId])
+  @@index([showcaseId])
 }
 
 // ----- NextAuth.js required models (Prisma Adapter) -----

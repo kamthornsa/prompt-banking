@@ -13,6 +13,7 @@ export interface PromptCardData {
   copyCount: number;
   avgRating: number | null;
   ratingCount: number;
+  showcaseCount: number;
 }
 
 const STAGE_LABELS: Record<Stage, string> = {
@@ -140,18 +141,28 @@ export function PromptCard({ prompt, onClick }: PromptCardProps) {
         </span>
       </div>
 
-      {/* Footer: copy count + copy button */}
+      {/* Footer: copy count + showcase count + copy button */}
       <div
         className="flex items-center justify-between pt-[13px]"
         style={{ borderTop: "1px dashed #E7E3D9" }}
       >
-        <span
-          className="flex items-center gap-[6px] text-[12.5px]"
-          style={{ color: "#9AA6A3" }}
-        >
-          <CopyIcon />
-          คัดลอกแล้ว {prompt.copyCount} ครั้ง
-        </span>
+        <div className="flex items-center gap-3">
+          <span
+            className="flex items-center gap-[6px] text-[12.5px]"
+            style={{ color: "#9AA6A3" }}
+          >
+            <CopyIcon />
+            คัดลอกแล้ว {prompt.copyCount} ครั้ง
+          </span>
+          {prompt.showcaseCount > 0 && (
+            <span
+              className="flex items-center gap-[5px] text-[12px] font-medium"
+              style={{ color: "#6A57C2" }}
+            >
+              🔗 {prompt.showcaseCount} ผลงาน
+            </span>
+          )}
+        </div>
         <button
           onClick={(e) => { e.stopPropagation(); onClick(prompt.id); }}
           className="flex items-center gap-[6px] text-[13px] font-semibold rounded-[9px] px-[13px] py-[7px] transition-colors"

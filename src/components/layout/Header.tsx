@@ -61,7 +61,7 @@ export function Header() {
         <nav className="flex gap-[3px] ml-1.5">
           <NavLink href="/" active={pathname === "/"}>หน้าหลัก</NavLink>
           {(isAuthor || isAdmin) && (
-            <NavLink href="/author/prompts" active={pathname.startsWith("/author")}>ผู้เขียน</NavLink>
+            <NavLink href="/author/prompts" active={pathname.startsWith("/author")}>พื้นที่ผู้เขียน</NavLink>
           )}
           {isAdmin && (
             <NavLink href="/admin" active={pathname.startsWith("/admin")}>ผู้ดูแล</NavLink>
@@ -89,24 +89,9 @@ export function Header() {
                 </div>
               </div>
               {session.user.image ? (
-                <button onClick={() => signOut({ callbackUrl: "/" })} title="ออกจากระบบ">
-                  <Image
-                    src={session.user.image}
-                    alt={session.user.name ?? ""}
-                    width={34}
-                    height={34}
-                    className="rounded-full ring-2 ring-[#E7E3D9] hover:ring-river transition-all"
-                  />
-                </button>
+                <UserDropdown user={session.user} />
               ) : (
-                <button
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  title="ออกจากระบบ"
-                  className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-white font-bold text-sm"
-                  style={{ background: "#0E9E6E" }}
-                >
-                  {(session.user.name ?? "?")[0].toUpperCase()}
-                </button>
+                <UserDropdown user={session.user} />
               )}
             </div>
           ) : (
@@ -172,6 +157,73 @@ function AuthorRequestButton({ status }: { status: AuthorRequestStatus | null })
         : localStatus === AuthorRequestStatus.REJECTED ? "ขอสิทธิ์ผู้เขียนใหม่"
         : "ขอสิทธิ์ผู้เขียน"}
     </button>
+  );
+}
+
+function UserDropdown({ user }: {
+  user: { name?: string | null; image?: string | null; slug: string | null };
+}) {
+  const [open, setOpen] = useState(false);
+
+  const avatar = user.image ? (
+    <Image
+      src={user.image}
+      alt={user.name ?? ""}
+      width={34}
+      height={34}
+      className="rounded-full ring-2 ring-[#E7E3D9] hover:ring-river transition-all"
+    />
+  ) : (
+    <div
+      className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-white font-bold text-sm"
+      style={{ background: "#0E9E6E" }}
+    >
+      {(user.name ?? "?")[0].toUpperCase()}
+    </div>
+  );
+
+  return (
+    <div className="relative">
+      {open && (
+        <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+      )}
+      <button onClick={() => setOpen((o) => !o)} className="shrink-0">
+        {avatar}
+      </button>
+      {open && (
+        <div
+          className="absolute right-0 z-50 mt-2 w-44 rounded-xl shadow-lg overflow-hidden py-1"
+          style={{ background: "#fff", border: "1px solid #E7E3D9" }}
+        >
+          {user.slug && (
+            <Link
+              href={`/u/${user.slug}`}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-[#F6F5F0]"
+              style={{ color: "#18302D" }}
+            >
+              👤 โปรไฟล์ของฉัน
+            </Link>
+          )}
+          <Link
+            href="/settings/profile"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-[#F6F5F0]"
+            style={{ color: "#18302D" }}
+          >
+            ⚙️ ตั้งค่าโปรไฟล์
+          </Link>
+          <div style={{ height: 1, background: "#E7E3D9", margin: "4px 0" }} />
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-red-50"
+            style={{ color: "#B54B2C" }}
+          >
+            🚪 ออกจากระบบ
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

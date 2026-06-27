@@ -2,6 +2,7 @@ import { fetchAuthorPrompts } from "@/actions/prompts";
 import { deletePrompt } from "@/actions/prompts";
 import { PromptStatus, Stage } from "@prisma/client";
 import Link from "next/link";
+import { AuthorTabBar } from "../AuthorTabBar";
 
 const STAGE_LABELS: Record<Stage, string> = {
   DESIGN: "ออกแบบ",
@@ -34,21 +35,16 @@ export default async function AuthorPromptsPage() {
 
   return (
     <div className="space-y-6">
+      <AuthorTabBar />
 
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <span
-            style={{ background: "#E2F4EC", color: "#0A6B4D", fontSize: 13, fontWeight: 600,
-              borderRadius: 99, padding: "3px 12px", display: "inline-block", marginBottom: 10 }}
-          >
-            พื้นที่ผู้เขียน
-          </span>
           <h1 className="font-serif font-bold text-[36px] leading-tight" style={{ color: "#18302D" }}>
             พรอมต์ของฉัน
           </h1>
           <p className="mt-1 text-sm" style={{ color: "#6B7B78" }}>
-            สร้างและจัดการพรอมต์ของคุณ — พรอมต์ใหม่จะรอแอดมินอนุมัติก่อนเผยแพร่
+            สร้างและจัดการพรอมต์ — พรอมต์ใหม่จะรอแอดมินอนุมัติก่อนเผยแพร่
           </p>
         </div>
         <Link

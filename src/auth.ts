@@ -5,24 +5,27 @@ import { prisma } from "@/lib/prisma";
 import { SEED_ADMIN_EMAILS } from "@/lib/constants";
 import { Role, AuthorRequestStatus } from "@prisma/client";
 
-// ขยาย Session type ให้มี id และ role
+// ขยาย Session type ให้มี id, role, slug
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
       role: Role;
       authorRequestStatus: AuthorRequestStatus | null;
+      slug: string | null;
     } & DefaultSession["user"];
   }
 
   interface User {
     role: Role;
     authorRequestStatus: AuthorRequestStatus | null;
+    slug: string | null;
   }
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  trustHost: true,
 
   providers: [
     Google({
@@ -42,6 +45,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         role: (user as { role: Role }).role ?? Role.USER,
         authorRequestStatus:
           (user as { authorRequestStatus: AuthorRequestStatus | null }).authorRequestStatus ?? null,
+        slug: (user as { slug: string | null }).slug ?? null,
       },
     }),
   },

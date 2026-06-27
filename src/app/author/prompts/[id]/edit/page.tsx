@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
 import { PromptForm } from "@/components/prompts/PromptForm";
 import { Role } from "@prisma/client";
 
@@ -37,13 +38,30 @@ export default async function AuthorEditPromptPage({ params }: Props) {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-serif font-bold text-gray-800">แก้ไขพรอมต์</h1>
+    <div className="space-y-6">
+      <div>
+        <Link
+          href="/author/prompts"
+          className="inline-flex items-center gap-1 text-sm mb-4"
+          style={{ color: "#6B7B78", textDecoration: "none" }}
+        >
+          ← กลับไปยังรายการ
+        </Link>
+        <h1 className="font-serif font-bold text-[32px] leading-tight" style={{ color: "#18302D" }}>
+          แก้ไขพรอมต์
+        </h1>
+      </div>
+
       {prompt.status === "PUBLISHED" && (
-        <p className="text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2">
-          พรอมต์นี้เผยแพร่อยู่แล้ว การแก้ไขจะทำให้กลับสู่สถานะ <strong>รออนุมัติ</strong> อีกครั้ง
-        </p>
+        <div
+          className="flex items-start gap-2.5 px-4 py-3 rounded-xl text-sm"
+          style={{ background: "#FFFBEB", border: "1px solid #F5D87A", color: "#92650A" }}
+        >
+          <span className="text-base shrink-0">⚠️</span>
+          <span>พรอมต์นี้เผยแพร่อยู่แล้ว การแก้ไขจะทำให้กลับสู่สถานะ <strong>รออนุมัติ</strong> อีกครั้ง</span>
+        </div>
       )}
+
       <PromptForm
         promptId={prompt.id}
         redirectTo="/author/prompts"

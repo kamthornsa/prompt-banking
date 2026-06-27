@@ -15,7 +15,7 @@ export interface FetchPromptsInput {
   grade?: Grade | "";
   skill?: SkillFocus | "";
   search?: string;
-  sort?: "newest" | "rating" | "copies";
+  sort?: "newest" | "rating" | "copies" | "showcases";
 }
 
 // ---- Fetch (used by server + client via server action) ----
@@ -45,10 +45,13 @@ export async function fetchPrompts(input: FetchPromptsInput): Promise<PromptCard
       grade: true,
       copyCount: true,
       ratings: { select: { value: true } },
+      showcases: { select: { id: true }, where: { isHidden: false } },
     },
     orderBy:
       input.sort === "copies"
         ? { copyCount: "desc" }
+        : input.sort === "showcases"
+        ? { showcases: { _count: "desc" } }
         : { createdAt: "desc" },
   });
 
@@ -68,6 +71,7 @@ export async function fetchPrompts(input: FetchPromptsInput): Promise<PromptCard
       copyCount: row.copyCount,
       avgRating: count > 0 ? sum / count : null,
       ratingCount: count,
+      showcaseCount: row.showcases.length,
     };
   });
 

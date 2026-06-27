@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { signIn } from "next-auth/react";
 import { fetchPromptDetail, PromptDetail, incrementCopyCount } from "@/actions/prompts";
 import { RatingSection } from "@/components/rating/RatingSection";
+import { ShowcaseSection } from "@/components/showcase/ShowcaseSection";
 import { Stage, Subject, SkillFocus, Grade } from "@prisma/client";
 import clsx from "clsx";
 import { useToast } from "@/components/ui/Toast";
@@ -209,6 +210,9 @@ export function PromptModal({ promptId, onClose }: PromptModalProps) {
 
                 {/* Rating section */}
                 <RatingSection promptId={promptId} />
+
+                {/* Showcase section */}
+                <ShowcaseSection promptId={promptId} />
               </>
             ) : (
               <p className="text-gray-500 text-center py-8">ไม่พบพรอมต์นี้</p>
