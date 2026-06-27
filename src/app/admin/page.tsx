@@ -2,12 +2,15 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
 export default async function AdminDashboard() {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
   const [promptCount, userCount, ratingCount, recentLogins] = await Promise.all([
     prisma.prompt.count(),
     prisma.user.count(),
     prisma.rating.count(),
     prisma.loginLog.count({
-      where: { loginAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+      where: { loginAt: { gte: sevenDaysAgo } },
     }),
   ]);
 
