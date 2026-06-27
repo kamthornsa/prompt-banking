@@ -9,7 +9,19 @@ datasource db {
 
 enum Role {
   USER
+  AUTHOR
   ADMIN
+}
+
+enum PromptStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+}
+
+enum AuthorRequestStatus {
+  PENDING
+  REJECTED
 }
 
 enum Stage {
@@ -41,15 +53,16 @@ enum Grade {
 }
 
 model User {
-  id             String     @id @default(cuid())
-  email          String     @unique
-  emailVerified  DateTime?
-  name           String?
-  image          String?
-  googleSub      String?    @unique
-  role           Role       @default(USER)
-  createdAt      DateTime   @default(now())
-  lastLoginAt    DateTime?
+  id                   String               @id @default(cuid())
+  email                String               @unique
+  emailVerified        DateTime?
+  name                 String?
+  image                String?
+  googleSub            String?              @unique
+  role                 Role                 @default(USER)
+  authorRequestStatus  AuthorRequestStatus?
+  createdAt            DateTime             @default(now())
+  lastLoginAt          DateTime?
 
   loginLogs      LoginLog[]
   ratings        Rating[]
@@ -79,7 +92,8 @@ model Prompt {
   subject       Subject
   skill         SkillFocus
   grade         Grade
-  copyCount     Int        @default(0) // เพิ่มทุกครั้งที่ user login กดคัดลอกสำเร็จ — core field ของ MVP
+  status        PromptStatus @default(PUBLISHED)
+  copyCount     Int          @default(0) // เพิ่มทุกครั้งที่ user login กดคัดลอกสำเร็จ — core field ของ MVP
   createdById   String
   createdBy     User       @relation("PromptCreatedBy", fields: [createdById], references: [id])
   createdAt     DateTime   @default(now())

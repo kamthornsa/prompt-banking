@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { Stage, Subject, SkillFocus, Grade } from "@prisma/client";
+import { Stage, Subject, SkillFocus, Grade, Role, PromptStatus } from "@prisma/client";
 import { PromptCardData } from "@/components/prompts/PromptCard";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
@@ -23,6 +23,7 @@ export interface FetchPromptsInput {
 export async function fetchPrompts(input: FetchPromptsInput): Promise<PromptCardData[]> {
   const rows = await prisma.prompt.findMany({
     where: {
+      status: PromptStatus.PUBLISHED,
       ...(input.stage && { stage: input.stage }),
       ...(input.subject && { subject: input.subject }),
       ...(input.grade && { grade: input.grade }),
@@ -37,6 +38,7 @@ export async function fetchPrompts(input: FetchPromptsInput): Promise<PromptCard
     select: {
       id: true,
       title: true,
+      text: true,
       stage: true,
       subject: true,
       skill: true,
@@ -53,9 +55,12 @@ export async function fetchPrompts(input: FetchPromptsInput): Promise<PromptCard
   const prompts: PromptCardData[] = rows.map((row) => {
     const count = row.ratings.length;
     const sum = row.ratings.reduce((a, r) => a + r.value, 0);
+    const raw = row.text.replace(/\s+/g, " ").trim();
+    const excerpt = raw.length > 110 ? raw.substring(0, 110) + "…" : raw;
     return {
       id: row.id,
       title: row.title,
+      excerpt,
       stage: row.stage,
       subject: row.subject,
       skill: row.skill,
@@ -127,6 +132,47 @@ export async function incrementCopyCount(promptId: string): Promise<{ ok: boolea
   return { ok: true };
 }
 
+// ---- Author: fetch own prompts ----
+
+export interface AuthorPromptRow {
+  id: string;
+  title: string;
+  stage: Stage;
+  subject: Subject;
+  grade: Grade;
+  status: PromptStatus;
+  createdAt: Date;
+  copyCount: number;
+  avgRating: number | null;
+  ratingCount: number;
+}
+
+export async function fetchAuthorPrompts(): Promise<AuthorPromptRow[]> {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  if (session.user.role !== Role.AUTHOR && session.user.role !== Role.ADMIN) {
+    throw new Error("Forbidden");
+  }
+  const rows = await prisma.prompt.findMany({
+    where: { createdById: session.user.id },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true, title: true, stage: true, subject: true, grade: true,
+      status: true, createdAt: true, copyCount: true,
+      ratings: { select: { value: true } },
+    },
+  });
+  return rows.map((row) => {
+    const vals = row.ratings.map((r) => r.value);
+    const avgRating =
+      vals.length > 0
+        ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10
+        : null;
+    const { ratings: _r, ...rest } = row;
+    return { ...rest, avgRating, ratingCount: vals.length };
+  });
+}
+
 // ---- Admin: CRUD ----
 
 const PromptSchema = z.object({
@@ -141,31 +187,74 @@ const PromptSchema = z.object({
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
-  if (session.user.role !== "ADMIN") throw new Error("Forbidden");
+  if (session.user.role !== Role.ADMIN) throw new Error("Forbidden");
   return session.user.id;
 }
 
+async function requireAuthorOrAdmin() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  const role = session.user.role as Role;
+  if (role !== Role.AUTHOR && role !== Role.ADMIN) throw new Error("Forbidden");
+  return { userId: session.user.id, role };
+}
+
 export async function createPrompt(data: z.infer<typeof PromptSchema>) {
-  const adminId = await requireAdmin();
+  const { userId, role } = await requireAuthorOrAdmin();
   const parsed = PromptSchema.parse(data);
+  const status = role === Role.ADMIN ? PromptStatus.PUBLISHED : PromptStatus.PENDING;
   await prisma.prompt.create({
-    data: { ...parsed, createdById: adminId },
+    data: { ...parsed, createdById: userId, status },
   });
   revalidatePath("/");
   revalidatePath("/admin/prompts");
+  revalidatePath("/author/prompts");
 }
 
 export async function updatePrompt(id: string, data: z.infer<typeof PromptSchema>) {
-  await requireAdmin();
+  const { userId, role } = await requireAuthorOrAdmin();
   const parsed = PromptSchema.parse(data);
-  await prisma.prompt.update({ where: { id }, data: parsed });
+
+  if (role === Role.AUTHOR) {
+    const existing = await prisma.prompt.findUnique({ where: { id }, select: { createdById: true } });
+    if (!existing) throw new Error("ไม่พบพรอมต์");
+    if (existing.createdById !== userId) throw new Error("Forbidden");
+    await prisma.prompt.update({ where: { id }, data: { ...parsed, status: PromptStatus.PENDING } });
+  } else {
+    await prisma.prompt.update({ where: { id }, data: parsed });
+  }
+
   revalidatePath("/");
   revalidatePath("/admin/prompts");
+  revalidatePath("/author/prompts");
 }
 
 export async function deletePrompt(id: string) {
-  await requireAdmin();
+  const { userId, role } = await requireAuthorOrAdmin();
+
+  if (role === Role.AUTHOR) {
+    const existing = await prisma.prompt.findUnique({ where: { id }, select: { createdById: true } });
+    if (!existing) throw new Error("ไม่พบพรอมต์");
+    if (existing.createdById !== userId) throw new Error("Forbidden");
+  }
+
   await prisma.prompt.delete({ where: { id } });
   revalidatePath("/");
   revalidatePath("/admin/prompts");
+  revalidatePath("/author/prompts");
+}
+
+export async function approvePrompt(id: string) {
+  await requireAdmin();
+  await prisma.prompt.update({ where: { id }, data: { status: PromptStatus.PUBLISHED } });
+  revalidatePath("/");
+  revalidatePath("/admin/prompts");
+  revalidatePath("/author/prompts");
+}
+
+export async function rejectPrompt(id: string) {
+  await requireAdmin();
+  await prisma.prompt.update({ where: { id }, data: { status: PromptStatus.REJECTED } });
+  revalidatePath("/admin/prompts");
+  revalidatePath("/author/prompts");
 }

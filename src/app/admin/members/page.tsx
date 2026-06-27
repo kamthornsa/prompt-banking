@@ -1,7 +1,14 @@
-import { prisma } from "@/lib/prisma";
-import { Role } from "@prisma/client";
+﻿import { prisma } from "@/lib/prisma";
+import { Role, AuthorRequestStatus } from "@prisma/client";
+import { promoteToAuthor, demoteAuthor, approveAuthorRequest, rejectAuthorRequest } from "@/actions/admin";
 
 const PAGE_SIZE = 20;
+
+const ROLE_CONFIG: Record<Role, { label: string; color: string; bg: string }> = {
+  ADMIN:   { label: "Admin",   color: "#B5772A", bg: "#FBEFE0" },
+  AUTHOR:  { label: "Author",  color: "#0A6B4D", bg: "#E2F4EC" },
+  USER:    { label: "User",    color: "#6B7B78", bg: "#F0ECE2" },
+};
 
 interface Props {
   searchParams: Promise<{ page?: string }>;
@@ -17,13 +24,8 @@ export default async function AdminMembersPage({ searchParams }: Props) {
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       select: {
-        id: true,
-        email: true,
-        name: true,
-        image: true,
-        role: true,
-        createdAt: true,
-        lastLoginAt: true,
+        id: true, email: true, name: true, image: true, role: true,
+        authorRequestStatus: true, createdAt: true, lastLoginAt: true,
         _count: { select: { ratings: true, loginLogs: true } },
       },
     }),
@@ -31,83 +33,162 @@ export default async function AdminMembersPage({ searchParams }: Props) {
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  const pendingRequests = users.filter(
+    (u) => u.authorRequestStatus === AuthorRequestStatus.PENDING
+  );
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-serif font-bold text-gray-800">
-          สมาชิกทั้งหมด ({total})
-        </h1>
-      </div>
+    <div className="space-y-6">
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* Page header */}
+      <h1 className="font-serif font-bold text-[28px]" style={{ color: "#18302D" }}>
+        สมาชิกทั้งหมด
+        <span className="font-sans font-normal text-[15px] ml-2" style={{ color: "#6B7B78" }}>
+          ({total})
+        </span>
+      </h1>
+
+      {/* Pending Author Requests */}
+      {pendingRequests.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <span
+              style={{ background: "#B5772A", color: "#fff", fontSize: 12, fontWeight: 700,
+                borderRadius: 99, width: 22, height: 22, display: "inline-flex",
+                alignItems: "center", justifyContent: "center" }}
+            >
+              {pendingRequests.length}
+            </span>
+            <span className="font-semibold text-sm" style={{ color: "#B5772A" }}>คำขอเป็น Author</span>
+          </div>
+          <div style={{ background: "#fff", border: "1px solid #F0D8B0", borderRadius: 18, overflow: "hidden" }}>
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ background: "#FEFAF3", borderBottom: "1px solid #F0D8B0" }}>
+                  <Th>ชื่อ / อีเมล</Th>
+                  <Th>สมัคร</Th>
+                  <Th align="right">จัดการ</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingRequests.map((u, i) => (
+                  <tr key={u.id} style={{ borderBottom: i < pendingRequests.length - 1 ? "1px solid #FBF0DC" : "none" }}>
+                    <td className="px-5 py-3.5">
+                      <div className="font-medium" style={{ color: "#18302D" }}>{u.name ?? "-"}</div>
+                      <div className="text-xs" style={{ color: "#9AA6A3" }}>{u.email}</div>
+                    </td>
+                    <td className="px-4 py-3.5 text-sm" style={{ color: "#6B7B78" }}>
+                      {new Date(u.createdAt).toLocaleDateString("th-TH")}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-2 justify-end">
+                        <ApproveRequestButton userId={u.id} />
+                        <RejectRequestButton userId={u.id} />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {/* Members table */}
+      <div style={{ background: "#fff", border: "1px solid #E7E3D9", borderRadius: 18, overflow: "hidden" }}>
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">ชื่อ / อีเมล</th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden md:table-cell">Role</th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden sm:table-cell">สมัคร</th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden sm:table-cell">Login ล่าสุด</th>
-              <th className="text-center px-4 py-3 font-semibold text-gray-600">Login</th>
-              <th className="text-center px-4 py-3 font-semibold text-gray-600">Rating</th>
+            <tr style={{ background: "#F6F5F0", borderBottom: "1px solid #E7E3D9" }}>
+              <Th>ชื่อ / อีเมล</Th>
+              <Th>สิทธิ์</Th>
+              <Th>สมัคร</Th>
+              <Th>Login ล่าสุด</Th>
+              <Th align="right">Login</Th>
+              <Th align="right">Rating</Th>
+              <Th align="right">จัดการ</Th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
-            {users.map((u) => (
-              <tr key={u.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <div className="font-medium text-gray-800 truncate max-w-[160px]">
-                    {u.name ?? "-"}
-                  </div>
-                  <div className="text-xs text-gray-400 truncate max-w-[160px]">{u.email}</div>
-                </td>
-                <td className="px-4 py-3 hidden md:table-cell">
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      u.role === Role.ADMIN
-                        ? "bg-gold/10 text-gold"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
-                  >
-                    {u.role}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-xs text-gray-500 hidden sm:table-cell">
-                  {new Date(u.createdAt).toLocaleDateString("th-TH")}
-                </td>
-                <td className="px-4 py-3 text-xs text-gray-500 hidden sm:table-cell">
-                  {u.lastLoginAt
-                    ? new Date(u.lastLoginAt).toLocaleDateString("th-TH")
-                    : "-"}
-                </td>
-                <td className="px-4 py-3 text-center text-gray-500 text-xs">
-                  {u._count.loginLogs}
-                </td>
-                <td className="px-4 py-3 text-center text-gray-500 text-xs">
-                  {u._count.ratings}
-                </td>
-              </tr>
-            ))}
+          <tbody>
+            {users.map((u, i) => {
+              const roleCfg = ROLE_CONFIG[u.role];
+              return (
+                <tr key={u.id} style={{ borderBottom: i < users.length - 1 ? "1px solid #F0ECE2" : "none" }}>
+                  <td className="px-5 py-3.5">
+                    <div className="font-medium truncate max-w-[160px]" style={{ color: "#18302D" }}>
+                      {u.name ?? "-"}
+                    </div>
+                    <div className="text-xs truncate max-w-[160px]" style={{ color: "#9AA6A3" }}>
+                      {u.email}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <span
+                        style={{ background: roleCfg.bg, color: roleCfg.color, fontSize: 12, fontWeight: 600,
+                          borderRadius: 99, padding: "2px 10px", display: "inline-block" }}
+                      >
+                        {roleCfg.label}
+                      </span>
+                      {u.authorRequestStatus === AuthorRequestStatus.PENDING && (
+                        <span
+                          style={{ background: "#FBEFE0", color: "#B5772A", fontSize: 11, fontWeight: 600,
+                            borderRadius: 99, padding: "2px 8px", display: "inline-block" }}
+                        >
+                          ขอ Author
+                        </span>
+                      )}
+                      {u.authorRequestStatus === AuthorRequestStatus.REJECTED && (
+                        <span
+                          style={{ background: "#FDEEE9", color: "#B54B2C", fontSize: 11, fontWeight: 600,
+                            borderRadius: 99, padding: "2px 8px", display: "inline-block" }}
+                        >
+                          ถูกปฏิเสธ
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3.5 text-sm" style={{ color: "#6B7B78" }}>
+                    {new Date(u.createdAt).toLocaleDateString("th-TH")}
+                  </td>
+                  <td className="px-4 py-3.5 text-sm" style={{ color: "#6B7B78" }}>
+                    {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("th-TH") : "—"}
+                  </td>
+                  <td className="px-4 py-3.5 text-right text-sm" style={{ color: "#6B7B78" }}>
+                    {u._count.loginLogs}
+                  </td>
+                  <td className="px-4 py-3.5 text-right text-sm" style={{ color: "#6B7B78" }}>
+                    {u._count.ratings}
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <div className="flex justify-end">
+                      {u.role === Role.USER   && <PromoteAuthorButton userId={u.id} />}
+                      {u.role === Role.AUTHOR && <DemoteAuthorButton userId={u.id} />}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
-
         {users.length === 0 && (
-          <p className="text-center text-gray-400 py-10">ยังไม่มีสมาชิก</p>
+          <p className="text-center py-14 text-sm" style={{ color: "#9AA6A3" }}>ยังไม่มีสมาชิก</p>
         )}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex gap-2 justify-center text-sm">
+        <div className="flex gap-2 justify-center">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <a
               key={p}
               href={`/admin/members?page=${p}`}
-              className={`px-3 py-1 rounded-lg border ${
-                p === page
-                  ? "bg-river text-white border-river"
-                  : "bg-white text-gray-600 border-gray-200 hover:bg-paper"
-              }`}
+              style={{
+                padding: "6px 14px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+                textDecoration: "none",
+                background: p === page ? "#0E9E6E" : "#fff",
+                color: p === page ? "#fff" : "#6B7B78",
+                border: p === page ? "1px solid #0E9E6E" : "1px solid #E7E3D9",
+              }}
             >
               {p}
             </a>
@@ -117,3 +198,88 @@ export default async function AdminMembersPage({ searchParams }: Props) {
     </div>
   );
 }
+
+function Th({ children, align = "left" }: { children?: React.ReactNode; align?: "left" | "right" }) {
+  return (
+    <th style={{ textAlign: align, padding: "10px 16px", fontWeight: 600, fontSize: 12.5, color: "#6B7B78" }}>
+      {children}
+    </th>
+  );
+}
+
+function PromoteAuthorButton({ userId }: { userId: string }) {
+  async function handle(formData: FormData) {
+    "use server";
+    await promoteToAuthor(formData.get("userId") as string);
+  }
+  return (
+    <form action={handle}>
+      <input type="hidden" name="userId" value={userId} />
+      <button
+        type="submit"
+        style={{ border: "1px solid #A8DABC", color: "#0A6B4D", borderRadius: 8,
+          padding: "4px 12px", fontSize: 12, fontWeight: 500, background: "transparent", cursor: "pointer" }}
+      >
+        ให้สิทธิ์ Author
+      </button>
+    </form>
+  );
+}
+
+function DemoteAuthorButton({ userId }: { userId: string }) {
+  async function handle(formData: FormData) {
+    "use server";
+    await demoteAuthor(formData.get("userId") as string);
+  }
+  return (
+    <form action={handle}>
+      <input type="hidden" name="userId" value={userId} />
+      <button
+        type="submit"
+        style={{ border: "1px solid #F4C5BB", color: "#B54B2C", borderRadius: 8,
+          padding: "4px 12px", fontSize: 12, fontWeight: 500, background: "transparent", cursor: "pointer" }}
+      >
+        ถอนสิทธิ์ Author
+      </button>
+    </form>
+  );
+}
+
+function ApproveRequestButton({ userId }: { userId: string }) {
+  async function handle(formData: FormData) {
+    "use server";
+    await approveAuthorRequest(formData.get("userId") as string);
+  }
+  return (
+    <form action={handle}>
+      <input type="hidden" name="userId" value={userId} />
+      <button
+        type="submit"
+        style={{ border: "1px solid #A8DABC", color: "#0A6B4D", borderRadius: 8,
+          padding: "4px 12px", fontSize: 12, fontWeight: 600, background: "#E2F4EC", cursor: "pointer" }}
+      >
+        อนุมัติ
+      </button>
+    </form>
+  );
+}
+
+function RejectRequestButton({ userId }: { userId: string }) {
+  async function handle(formData: FormData) {
+    "use server";
+    await rejectAuthorRequest(formData.get("userId") as string);
+  }
+  return (
+    <form action={handle}>
+      <input type="hidden" name="userId" value={userId} />
+      <button
+        type="submit"
+        style={{ border: "1px solid #F4C5BB", color: "#B54B2C", borderRadius: 8,
+          padding: "4px 12px", fontSize: 12, fontWeight: 500, background: "transparent", cursor: "pointer" }}
+      >
+        ปฏิเสธ
+      </button>
+    </form>
+  );
+}
+

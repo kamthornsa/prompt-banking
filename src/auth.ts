@@ -3,7 +3,7 @@ import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import { SEED_ADMIN_EMAILS } from "@/lib/constants";
-import { Role } from "@prisma/client";
+import { Role, AuthorRequestStatus } from "@prisma/client";
 
 // ขยาย Session type ให้มี id และ role
 declare module "next-auth" {
@@ -11,11 +11,13 @@ declare module "next-auth" {
     user: {
       id: string;
       role: Role;
+      authorRequestStatus: AuthorRequestStatus | null;
     } & DefaultSession["user"];
   }
 
   interface User {
     role: Role;
+    authorRequestStatus: AuthorRequestStatus | null;
   }
 }
 
@@ -38,6 +40,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ...session.user,
         id: user.id,
         role: (user as { role: Role }).role ?? Role.USER,
+        authorRequestStatus:
+          (user as { authorRequestStatus: AuthorRequestStatus | null }).authorRequestStatus ?? null,
       },
     }),
   },

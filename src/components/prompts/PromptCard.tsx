@@ -1,11 +1,11 @@
 "use client";
 
 import { Stage, Subject, SkillFocus, Grade } from "@prisma/client";
-import clsx from "clsx";
 
 export interface PromptCardData {
   id: string;
   title: string;
+  excerpt: string;
   stage: Stage;
   subject: Subject;
   skill: SkillFocus;
@@ -16,19 +16,19 @@ export interface PromptCardData {
 }
 
 const STAGE_LABELS: Record<Stage, string> = {
-  DESIGN: "วิเคราะห์ & ออกแบบ",
-  MATERIAL: "สร้างสื่อ & ใบงาน",
-  FACILITATE: "จัดกิจกรรมในชั้นเรียน",
-  ASSESS: "ประเมิน & ป้อนกลับ",
-  REFLECT: "สะท้อนคิด & ต่อยอด",
+  DESIGN: "ออกแบบ",
+  MATERIAL: "สร้างสื่อ",
+  FACILITATE: "จัดกิจกรรม",
+  ASSESS: "ประเมินผล",
+  REFLECT: "สะท้อนคิด",
 };
 
-const STAGE_COLORS: Record<Stage, string> = {
-  DESIGN: "bg-[#0369a1]/10 text-[#0369a1]",
-  MATERIAL: "bg-[#0891b2]/10 text-[#0891b2]",
-  FACILITATE: "bg-[#0d9488]/10 text-[#0d9488]",
-  ASSESS: "bg-[#65a30d]/10 text-[#65a30d]",
-  REFLECT: "bg-[#d97706]/10 text-[#d97706]",
+const STAGE_STYLE: Record<Stage, { color: string; bg: string }> = {
+  DESIGN:     { color: "#2E83A6", bg: "#E5F0F7" },
+  MATERIAL:   { color: "#1AA0A0", bg: "#E1F4F4" },
+  FACILITATE: { color: "#0E9E6E", bg: "#E2F4EC" },
+  ASSESS:     { color: "#B5772A", bg: "#FBEFE0" },
+  REFLECT:    { color: "#B54B2C", bg: "#FBE9E2" },
 };
 
 const SUBJECT_LABELS: Record<Subject, string> = {
@@ -45,10 +45,10 @@ const GRADE_LABELS: Record<Grade, string> = {
   M1_3: "ม.1–3",
 };
 
-const SKILL_CONFIG: Record<SkillFocus, { label: string; className: string }> = {
-  RL:   { label: "RL",    className: "bg-rl-bg text-rl" },
-  CT:   { label: "CT",    className: "bg-ct-bg text-ct" },
-  BOTH: { label: "RL+CT", className: "bg-both-bg text-both" },
+const SKILL_STYLE: Record<SkillFocus, { label: string; color: string; bg: string }> = {
+  RL:   { label: "การอ่าน (RL)",    color: "#246F95", bg: "#E5F0F7" },
+  CT:   { label: "คิดวิเคราะห์ (CT)", color: "#B5772A", bg: "#FBEFE0" },
+  BOTH: { label: "RL+CT",            color: "#6A57C2", bg: "#EFEAFA" },
 };
 
 interface PromptCardProps {
@@ -57,56 +57,121 @@ interface PromptCardProps {
 }
 
 export function PromptCard({ prompt, onClick }: PromptCardProps) {
-  const skill = SKILL_CONFIG[prompt.skill];
+  const stage = STAGE_STYLE[prompt.stage];
+  const skill = SKILL_STYLE[prompt.skill];
 
   return (
-    <button
+    <article
       onClick={() => onClick(prompt.id)}
-      className="group text-left w-full bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-river/40 transition-all duration-200 flex flex-col overflow-hidden"
+      className="cursor-pointer flex flex-col gap-[13px] transition-all duration-150"
+      style={{
+        background: "#fff",
+        border: "1px solid #E7E3D9",
+        borderRadius: 18,
+        padding: 20,
+        boxShadow: "0 1px 2px rgba(24,48,45,0.04)",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(24,48,45,0.10)";
+        (e.currentTarget as HTMLElement).style.borderColor = "#C5C0B8";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.transform = "none";
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 2px rgba(24,48,45,0.04)";
+        (e.currentTarget as HTMLElement).style.borderColor = "#E7E3D9";
+      }}
     >
-      {/* Stage strip */}
-      <div className={clsx("px-4 py-1.5 text-xs font-medium", STAGE_COLORS[prompt.stage])}>
-        {STAGE_LABELS[prompt.stage]}
+      {/* Top row: stage badge + rating */}
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className="inline-flex items-center gap-[6px] text-[12px] font-semibold px-[11px] py-[4px] rounded-full whitespace-nowrap"
+          style={{ background: stage.bg, color: stage.color }}
+        >
+          <span style={{ fontSize: 8 }}>●</span>
+          {STAGE_LABELS[prompt.stage]}
+        </span>
+
+        {prompt.ratingCount > 0 ? (
+          <span className="flex items-center gap-1 text-[13px] whitespace-nowrap" style={{ color: "#6B7B78" }}>
+            <span style={{ color: "#C58A1F", fontSize: 15 }}>★</span>
+            <strong style={{ color: "#18302D", fontWeight: 600 }}>{prompt.avgRating!.toFixed(1)}</strong>
+            <span>({prompt.ratingCount})</span>
+          </span>
+        ) : (
+          <span className="text-[12px]" style={{ color: "#9AA6A3" }}>ยังไม่มีคะแนน</span>
+        )}
       </div>
 
-      {/* Body */}
-      <div className="p-4 flex-1 flex flex-col gap-3">
-        <h3 className="font-serif font-semibold text-gray-800 text-sm leading-snug line-clamp-3 group-hover:text-river transition-colors">
-          {prompt.title}
-        </h3>
+      {/* Title */}
+      <h3
+        className="font-serif font-semibold text-[17px] leading-[1.4]"
+        style={{ color: "#18302D" }}
+      >
+        {prompt.title}
+      </h3>
 
-        {/* Tags */}
-        <div className="flex flex-wrap gap-1.5 mt-auto">
-          <span className={clsx("text-xs px-2 py-0.5 rounded-full font-medium", skill.className)}>
-            {skill.label}
-          </span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-            {SUBJECT_LABELS[prompt.subject]}
-          </span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-            {GRADE_LABELS[prompt.grade]}
-          </span>
-        </div>
+      {/* Excerpt */}
+      {prompt.excerpt && (
+        <p className="text-[13.5px] leading-[1.65] flex-1" style={{ color: "#6B7B78" }}>
+          {prompt.excerpt}
+        </p>
+      )}
 
-        {/* Stats */}
-        <div className="flex items-center justify-end gap-3 text-xs text-gray-400 border-t border-gray-100 pt-2">
-          {prompt.ratingCount > 0 ? (
-            <span className="flex items-center gap-1">
-              <span className="text-gold">★</span>
-              <span className="font-medium text-gray-600">
-                {prompt.avgRating!.toFixed(1)}
-              </span>
-              <span>({prompt.ratingCount})</span>
-            </span>
-          ) : (
-            <span className="text-gray-300">ยังไม่มีคะแนน</span>
-          )}
-          <span className="flex items-center gap-1">
-            <span>📋</span>
-            <span>{prompt.copyCount}</span>
-          </span>
-        </div>
+      {/* Tags */}
+      <div className="flex flex-wrap gap-[6px]">
+        <span
+          className="text-[11.5px] font-medium px-[10px] py-[4px] rounded-[7px]"
+          style={{ background: "#F0ECE2", color: "#6B7B78" }}
+        >
+          {SUBJECT_LABELS[prompt.subject]}
+        </span>
+        <span
+          className="text-[11.5px] font-medium px-[10px] py-[4px] rounded-[7px]"
+          style={{ background: "#F0ECE2", color: "#6B7B78" }}
+        >
+          {GRADE_LABELS[prompt.grade]}
+        </span>
+        <span
+          className="inline-flex items-center gap-[6px] text-[12px] font-semibold px-[11px] py-[4px] rounded-full whitespace-nowrap"
+          style={{ background: skill.bg, color: skill.color }}
+        >
+          {skill.label}
+        </span>
       </div>
-    </button>
+
+      {/* Footer: copy count + copy button */}
+      <div
+        className="flex items-center justify-between pt-[13px]"
+        style={{ borderTop: "1px dashed #E7E3D9" }}
+      >
+        <span
+          className="flex items-center gap-[6px] text-[12.5px]"
+          style={{ color: "#9AA6A3" }}
+        >
+          <CopyIcon />
+          คัดลอกแล้ว {prompt.copyCount} ครั้ง
+        </span>
+        <button
+          onClick={(e) => { e.stopPropagation(); onClick(prompt.id); }}
+          className="flex items-center gap-[6px] text-[13px] font-semibold rounded-[9px] px-[13px] py-[7px] transition-colors"
+          style={{ background: "#E2F4EC", color: "#0A6B4D", border: "none" }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#CCF0E0"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#E2F4EC"; }}
+        >
+          <CopyIcon />
+          คัดลอก
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15V5a2 2 0 0 1 2-2h8" />
+    </svg>
   );
 }

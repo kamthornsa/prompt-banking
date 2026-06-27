@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { Noto_Sans_Thai, Noto_Serif_Thai } from "next/font/google";
+import { IBM_Plex_Sans_Thai, Anuphan } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const notoSansThai = Noto_Sans_Thai({
+const ibmPlexSansThai = IBM_Plex_Sans_Thai({
   variable: "--font-sans",
   subsets: ["thai"],
   weight: ["300", "400", "500", "600", "700"],
   display: "swap",
 });
 
-const notoSerifThai = Noto_Serif_Thai({
+const anuphan = Anuphan({
   variable: "--font-serif",
   subsets: ["thai"],
-  weight: ["400", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -31,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="th"
-      className={`${notoSansThai.variable} ${notoSerifThai.variable} h-full antialiased`}
+      className={`${ibmPlexSansThai.variable} ${anuphan.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-gray-800">
         <Providers>{children}</Providers>

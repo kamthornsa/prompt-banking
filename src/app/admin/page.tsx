@@ -12,26 +12,41 @@ export default async function AdminDashboard() {
   ]);
 
   const stats = [
-    { label: "พรอมต์ทั้งหมด", value: promptCount, icon: "📝", href: "/admin/prompts" },
-    { label: "สมาชิกทั้งหมด", value: userCount, icon: "👥", href: "/admin/members" },
-    { label: "การให้คะแนน", value: ratingCount, icon: "★", href: "/admin/members" },
-    { label: "เข้าระบบ (7 วัน)", value: recentLogins, icon: "🔐", href: "/admin/members" },
+    { label: "พรอมต์ทั้งหมด", value: promptCount, href: "/admin/prompts" },
+    { label: "สมาชิกทั้งหมด", value: userCount, href: "/admin/members" },
+    { label: "การให้คะแนน", value: ratingCount, href: "/admin/members" },
+    { label: "เข้าระบบ (7 วัน)", value: recentLogins, href: "/admin/members", accent: true },
   ];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-serif font-bold text-gray-800">Dashboard</h1>
+      <div>
+        <span
+          style={{ background: "#E2F4EC", color: "#0A6B4D", fontSize: 13, fontWeight: 600,
+            borderRadius: 99, padding: "3px 12px", display: "inline-block", marginBottom: 10 }}
+        >
+          พื้นที่ผู้ดูแล
+        </span>
+        <h1 className="font-serif font-bold text-[36px] leading-tight" style={{ color: "#18302D" }}>
+          Dashboard
+        </h1>
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => (
           <Link
             key={s.label}
             href={s.href}
-            className="bg-white rounded-xl border border-gray-200 p-4 hover:border-river/40 hover:shadow-sm transition-all"
+            style={{ background: "#fff", border: "1px solid #E7E3D9", borderRadius: 16,
+              padding: "20px 24px", textDecoration: "none", display: "block" }}
           >
-            <div className="text-2xl mb-1">{s.icon}</div>
-            <div className="text-2xl font-bold text-river">{s.value}</div>
-            <div className="text-sm text-gray-500 mt-0.5">{s.label}</div>
+            <div
+              className="font-serif font-bold text-[32px]"
+              style={{ color: s.accent ? "#0E9E6E" : "#18302D", lineHeight: 1, marginBottom: 8 }}
+            >
+              {s.value}
+            </div>
+            <div className="text-sm" style={{ color: "#6B7B78" }}>{s.label}</div>
           </Link>
         ))}
       </div>
@@ -39,13 +54,16 @@ export default async function AdminDashboard() {
       <div className="flex gap-3 flex-wrap">
         <Link
           href="/admin/prompts/new"
-          className="bg-river hover:bg-river-dark text-white font-medium px-5 py-2.5 rounded-lg transition-colors text-sm"
+          style={{ background: "#0E9E6E", color: "#fff", borderRadius: 12, padding: "10px 20px",
+            fontWeight: 600, fontSize: 14, textDecoration: "none", display: "inline-block" }}
         >
           + เพิ่มพรอมต์ใหม่
         </Link>
         <Link
           href="/admin/prompts"
-          className="bg-white hover:bg-paper text-river font-medium px-5 py-2.5 rounded-lg border border-river transition-colors text-sm"
+          style={{ background: "#fff", color: "#18302D", borderRadius: 12, padding: "10px 20px",
+            fontWeight: 600, fontSize: 14, textDecoration: "none", display: "inline-block",
+            border: "1px solid #E7E3D9" }}
         >
           จัดการพรอมต์ทั้งหมด
         </Link>

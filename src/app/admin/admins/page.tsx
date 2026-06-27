@@ -1,9 +1,8 @@
-import { prisma } from "@/lib/prisma";
+﻿import { prisma } from "@/lib/prisma";
 import { PROTECTED_ADMIN_EMAIL } from "@/lib/constants";
 import { Role } from "@prisma/client";
 import { promoteToAdmin, demoteAdmin } from "@/actions/admin";
 
-// Void wrappers for form actions
 async function handlePromote(formData: FormData) {
   "use server";
   const userId = formData.get("userId") as string;
@@ -33,46 +32,49 @@ export default async function AdminAdminsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-serif font-bold text-gray-800">
+      <h1 className="font-serif font-bold text-[28px]" style={{ color: "#18302D" }}>
         จัดการผู้ดูแลระบบ
       </h1>
 
       {/* Current admins */}
       <section className="space-y-3">
-        <h2 className="font-semibold text-gray-700">ผู้ดูแลระบบปัจจุบัน ({admins.length})</h2>
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <h2 className="font-semibold text-sm" style={{ color: "#6B7B78" }}>
+          ผู้ดูแลระบบปัจจุบัน ({admins.length})
+        </h2>
+        <div style={{ background: "#fff", border: "1px solid #E7E3D9", borderRadius: 18, overflow: "hidden" }}>
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 font-semibold text-gray-600">ชื่อ / อีเมล</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden sm:table-cell">เข้าระบบล่าสุด</th>
-                <th className="px-4 py-3" />
+              <tr style={{ background: "#F6F5F0", borderBottom: "1px solid #E7E3D9" }}>
+                <Th>ชื่อ / อีเมล</Th>
+                <Th>เข้าระบบล่าสุด</Th>
+                <Th align="right">จัดการ</Th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {admins.map((u) => (
-                <tr key={u.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-gray-800">{u.name ?? "-"}</div>
-                    <div className="text-xs text-gray-400">{u.email}</div>
+            <tbody>
+              {admins.map((u, i) => (
+                <tr key={u.id} style={{ borderBottom: i < admins.length - 1 ? "1px solid #F0ECE2" : "none" }}>
+                  <td className="px-5 py-3.5">
+                    <div className="font-medium" style={{ color: "#18302D" }}>{u.name ?? "-"}</div>
+                    <div className="text-xs" style={{ color: "#9AA6A3" }}>{u.email}</div>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs hidden sm:table-cell">
-                    {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("th-TH") : "-"}
+                  <td className="px-4 py-3.5 text-sm" style={{ color: "#6B7B78" }}>
+                    {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("th-TH") : "—"}
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    {u.email !== PROTECTED_ADMIN_EMAIL && (
+                  <td className="px-4 py-3.5 text-right">
+                    {u.email !== PROTECTED_ADMIN_EMAIL ? (
                       <form action={handleDemote}>
                         <input type="hidden" name="userId" value={u.id} />
                         <button
                           type="submit"
-                          className="text-xs text-red-400 hover:text-red-600 hover:underline"
+                          style={{ border: "1px solid #F4C5BB", color: "#B54B2C", borderRadius: 8,
+                            padding: "4px 12px", fontSize: 12, fontWeight: 500,
+                            background: "transparent", cursor: "pointer" }}
                         >
                           ลดสิทธิ์
                         </button>
                       </form>
-                    )}
-                    {u.email === PROTECTED_ADMIN_EMAIL && (
-                      <span className="text-xs text-gray-300">ป้องกัน</span>
+                    ) : (
+                      <span className="text-xs" style={{ color: "#C0C8C6" }}>ป้องกัน</span>
                     )}
                   </td>
                 </tr>
@@ -84,32 +86,36 @@ export default async function AdminAdminsPage() {
 
       {/* Promote user */}
       <section className="space-y-3">
-        <h2 className="font-semibold text-gray-700">เพิ่มผู้ดูแล (จากสมาชิกที่เคย login แล้ว)</h2>
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <h2 className="font-semibold text-sm" style={{ color: "#6B7B78" }}>
+          เพิ่มผู้ดูแล (จากสมาชิกที่เคย login แล้ว)
+        </h2>
+        <div style={{ background: "#fff", border: "1px solid #E7E3D9", borderRadius: 18, overflow: "hidden" }}>
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 font-semibold text-gray-600">ชื่อ / อีเมล</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden sm:table-cell">เข้าระบบล่าสุด</th>
-                <th className="px-4 py-3" />
+              <tr style={{ background: "#F6F5F0", borderBottom: "1px solid #E7E3D9" }}>
+                <Th>ชื่อ / อีเมล</Th>
+                <Th>เข้าระบบล่าสุด</Th>
+                <Th align="right">จัดการ</Th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {regularUsers.map((u) => (
-                <tr key={u.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-gray-800">{u.name ?? "-"}</div>
-                    <div className="text-xs text-gray-400">{u.email}</div>
+            <tbody>
+              {regularUsers.map((u, i) => (
+                <tr key={u.id} style={{ borderBottom: i < regularUsers.length - 1 ? "1px solid #F0ECE2" : "none" }}>
+                  <td className="px-5 py-3.5">
+                    <div className="font-medium" style={{ color: "#18302D" }}>{u.name ?? "-"}</div>
+                    <div className="text-xs" style={{ color: "#9AA6A3" }}>{u.email}</div>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs hidden sm:table-cell">
-                    {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("th-TH") : "-"}
+                  <td className="px-4 py-3.5 text-sm" style={{ color: "#6B7B78" }}>
+                    {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("th-TH") : "—"}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3.5 text-right">
                     <form action={handlePromote}>
                       <input type="hidden" name="userId" value={u.id} />
                       <button
                         type="submit"
-                        className="text-xs text-river hover:underline font-medium"
+                        style={{ border: "1px solid #A8DABC", color: "#0A6B4D", borderRadius: 8,
+                          padding: "4px 12px", fontSize: 12, fontWeight: 500,
+                          background: "transparent", cursor: "pointer" }}
                       >
                         ยกระดับเป็น Admin
                       </button>
@@ -119,7 +125,9 @@ export default async function AdminAdminsPage() {
               ))}
               {regularUsers.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="text-center text-gray-400 py-6">ยังไม่มีสมาชิก</td>
+                  <td colSpan={3} className="text-center py-10 text-sm" style={{ color: "#9AA6A3" }}>
+                    ยังไม่มีสมาชิก
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -129,3 +137,12 @@ export default async function AdminAdminsPage() {
     </div>
   );
 }
+
+function Th({ children, align = "left" }: { children?: React.ReactNode; align?: "left" | "right" }) {
+  return (
+    <th style={{ textAlign: align, padding: "10px 16px", fontWeight: 600, fontSize: 12.5, color: "#6B7B78" }}>
+      {children}
+    </th>
+  );
+}
+

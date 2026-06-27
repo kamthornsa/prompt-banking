@@ -1,75 +1,164 @@
 "use client";
 
 import { Stage } from "@prisma/client";
-import clsx from "clsx";
 
-const STAGES: { value: Stage; label: string; emoji: string; color: string }[] =
-  [
-    { value: Stage.DESIGN, label: "วิเคราะห์\n& ออกแบบ", emoji: "🔭", color: "bg-[#0369a1]" },
-    { value: Stage.MATERIAL, label: "สร้างสื่อ\n& ใบงาน", emoji: "📝", color: "bg-[#0891b2]" },
-    { value: Stage.FACILITATE, label: "จัดกิจกรรม\nในชั้นเรียน", emoji: "🎓", color: "bg-[#0d9488]" },
-    { value: Stage.ASSESS, label: "ประเมิน\n& ป้อนกลับ", emoji: "📊", color: "bg-[#65a30d]" },
-    { value: Stage.REFLECT, label: "สะท้อนคิด\n& ต่อยอด", emoji: "💡", color: "bg-[#d97706]" },
-  ];
+const STAGES: {
+  value: Stage;
+  num: number;
+  label: string;
+  shortLabel: string;
+  color: string;
+  bg: string;
+}[] = [
+  { value: Stage.DESIGN,     num: 1, label: "ออกแบบ",     shortLabel: "ออกแบบ",     color: "#2E83A6", bg: "#E5F0F7" },
+  { value: Stage.MATERIAL,   num: 2, label: "สร้างสื่อ",   shortLabel: "สร้างสื่อ",   color: "#1AA0A0", bg: "#E1F4F4" },
+  { value: Stage.FACILITATE, num: 3, label: "จัดกิจกรรม", shortLabel: "จัดกิจกรรม", color: "#0E9E6E", bg: "#E2F4EC" },
+  { value: Stage.ASSESS,     num: 4, label: "ประเมินผล",   shortLabel: "ประเมิน",     color: "#B5772A", bg: "#FBEFE0" },
+  { value: Stage.REFLECT,    num: 5, label: "สะท้อนคิด",  shortLabel: "สะท้อนคิด",  color: "#B54B2C", bg: "#FBE9E2" },
+];
 
 interface AIPACKHeroProps {
   selectedStage: Stage | null;
   onStageChange: (stage: Stage | null) => void;
+  promptCounts?: Partial<Record<Stage, number>>;
 }
 
-export function AIPACKHero({ selectedStage, onStageChange }: AIPACKHeroProps) {
+export function AIPACKHero({ selectedStage, onStageChange, promptCounts }: AIPACKHeroProps) {
   return (
-    <section className="bg-river py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-6">
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white">
-            สายน้ำ AIPACK
-          </h1>
-          <p className="text-white/70 text-sm mt-1">
-            เลือกขั้นตอนเพื่อกรองพรอมต์ตามกระบวนการจัดการเรียนรู้
-          </p>
-        </div>
+    <section className="w-full max-w-[1180px] mx-auto px-4 sm:px-6 pt-8 pb-4">
+      <div
+        className="relative overflow-hidden"
+        style={{
+          background: "#fff",
+          border: "1px solid #E7E3D9",
+          borderRadius: 26,
+          padding: "38px 40px 30px",
+          boxShadow: "0 1px 2px rgba(24,48,45,0.04)",
+        }}
+      >
+        {/* Decorative radial gradient */}
+        <div
+          style={{
+            position: "absolute",
+            top: -60,
+            right: -40,
+            width: 240,
+            height: 240,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(14,158,110,0.10), transparent 70%)",
+            pointerEvents: "none",
+          }}
+        />
 
-        {/* River flow */}
-        <div className="relative flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto pb-2">
-          {STAGES.map((stage, idx) => (
-            <div key={stage.value} className="flex items-center shrink-0">
-              {/* Stage button */}
-              <button
-                onClick={() =>
-                  onStageChange(selectedStage === stage.value ? null : stage.value)
-                }
-                className={clsx(
-                  "flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-white font-medium transition-all duration-200 w-[76px] sm:w-[90px]",
-                  "border-2 text-xs leading-tight text-center whitespace-pre-line",
-                  selectedStage === stage.value
-                    ? [stage.color, "border-gold shadow-lg scale-105"]
-                    : "bg-white/10 border-white/20 hover:bg-white/20 hover:border-white/40"
-                )}
-              >
-                <span className="text-xl">{stage.emoji}</span>
-                <span>{stage.label}</span>
-              </button>
-              {/* Arrow connector */}
-              {idx < STAGES.length - 1 && (
-                <span className="text-gold text-lg mx-0.5 sm:mx-1">→</span>
-              )}
-            </div>
-          ))}
-        </div>
+        {/* Badge */}
+        <span
+          className="inline-flex items-center gap-[7px] text-[12.5px] font-semibold tracking-[0.2px]"
+          style={{
+            color: "#0A6B4D",
+            background: "#E2F4EC",
+            padding: "5px 12px",
+            borderRadius: 999,
+          }}
+        >
+          Kalasin CRAFT AI · ม.1–3
+        </span>
 
-        {/* Stage number labels */}
-        <div className="flex justify-center gap-1 sm:gap-2 mt-1 overflow-x-auto">
-          {STAGES.map((stage, idx) => (
-            <div key={stage.value} className="flex items-center shrink-0">
-              <span className="text-white/40 text-xs w-[76px] sm:w-[90px] text-center">
-                {idx + 1}
-              </span>
-              {idx < STAGES.length - 1 && (
-                <span className="mx-0.5 sm:mx-1 w-4 sm:w-5" />
-              )}
+        {/* Headline */}
+        <h1
+          className="font-serif font-bold text-[34px] sm:text-[38px] leading-[1.25] mt-4 max-w-[640px] tracking-[-0.3px]"
+          style={{ color: "#18302D" }}
+        >
+          พรอมต์ดี ๆ สำหรับห้องเรียน<br />
+          หยิบไปใช้กับ AI ได้ทันที
+        </h1>
+
+        {/* Subtitle */}
+        <p
+          className="text-[16px] leading-[1.7] mt-3 max-w-[560px]"
+          style={{ color: "#6B7B78" }}
+        >
+          คลังพรอมต์สำหรับครูภาษาไทย วิทยาศาสตร์ และสังคมศึกษา ออกแบบการสอนที่พัฒนา
+          <strong style={{ color: "#18302D", fontWeight: 600 }}> การอ่าน (RL)</strong> และ
+          <strong style={{ color: "#18302D", fontWeight: 600 }}> การคิดเชิงวิพากษ์ (CT)</strong>
+        </p>
+
+        {/* AIPACK Stage Picker */}
+        <div className="mt-7">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="font-serif font-semibold text-sm" style={{ color: "#18302D" }}>
+              สายน้ำ AIPACK
+            </span>
+            <span className="text-[12.5px]" style={{ color: "#9AA6A3" }}>
+              — เลือกขั้นตอนการสอนเพื่อกรองพรอมต์
+            </span>
+          </div>
+
+          <div className="relative">
+            {/* Gradient connecting line */}
+            <div
+              style={{
+                position: "absolute",
+                left: "7%",
+                right: "7%",
+                top: 25,
+                height: 4,
+                borderRadius: 3,
+                background:
+                  "linear-gradient(90deg, #2E83A6, #1AA0A0, #0E9E6E, #E0A23B, #D9694A)",
+                opacity: 0.45,
+              }}
+            />
+
+            {/* Stage buttons */}
+            <div className="relative grid grid-cols-5 gap-2">
+              {STAGES.map((stage) => {
+                const isActive = selectedStage === stage.value;
+                return (
+                  <button
+                    key={stage.value}
+                    onClick={() => onStageChange(isActive ? null : stage.value)}
+                    className="flex flex-col items-center gap-[9px] bg-transparent border-none cursor-pointer p-0 font-inherit"
+                  >
+                    {/* Circle */}
+                    <span
+                      className="w-[50px] h-[50px] rounded-full flex items-center justify-center font-serif font-bold text-[18px] transition-all duration-150"
+                      style={
+                        isActive
+                          ? {
+                              background: stage.color,
+                              color: "#fff",
+                              border: `3px solid ${stage.color}`,
+                              boxShadow: `0 4px 12px ${stage.color}55`,
+                              transform: "scale(1.1)",
+                            }
+                          : {
+                              background: "#fff",
+                              color: stage.color,
+                              border: `3px solid ${stage.color}`,
+                              boxShadow: "0 1px 3px rgba(24,48,45,0.08)",
+                            }
+                      }
+                    >
+                      {stage.num}
+                    </span>
+                    {/* Label */}
+                    <span
+                      className="text-[13px] font-semibold text-center leading-[1.25]"
+                      style={{ color: isActive ? stage.color : "#18302D" }}
+                    >
+                      {stage.label}
+                    </span>
+                    {/* Count */}
+                    {promptCounts && (
+                      <span className="text-[11px]" style={{ color: "#9AA6A3" }}>
+                        {promptCounts[stage.value] ?? 0} พรอมต์
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </section>

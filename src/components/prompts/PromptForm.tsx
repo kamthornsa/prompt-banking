@@ -20,6 +20,7 @@ type FormData = z.infer<typeof PromptSchema>;
 interface PromptFormProps {
   initialData?: Partial<FormData>;
   promptId?: string;
+  redirectTo?: string;
 }
 
 const STAGE_OPTIONS = [
@@ -50,7 +51,7 @@ const GRADE_OPTIONS = [
   { value: "M1_3", label: "ม.1–3" },
 ];
 
-export function PromptForm({ initialData, promptId }: PromptFormProps) {
+export function PromptForm({ initialData, promptId, redirectTo = "/admin/prompts" }: PromptFormProps) {
   const router = useRouter();
   const [form, setForm] = useState<Partial<FormData>>(initialData ?? {});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -79,7 +80,7 @@ export function PromptForm({ initialData, promptId }: PromptFormProps) {
       } else {
         await createPrompt(parsed.data);
       }
-      router.push("/admin/prompts");
+      router.push(redirectTo);
       router.refresh();
     } catch (err) {
       console.error(err);

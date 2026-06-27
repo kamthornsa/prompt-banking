@@ -50,36 +50,36 @@ export function PromptBrowser({ initialPrompts }: PromptBrowserProps) {
 
   return (
     <>
+      {/* Hero: white card with title + AIPACK stage picker */}
       <AIPACKHero
         selectedStage={filters.stage || null}
         onStageChange={handleStageChange}
       />
 
+      {/* Filter bar: search + sort + chips */}
       <FilterBar filters={filters} onChange={handleFiltersChange} />
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* Results count */}
+      {/* Results */}
+      <main className="max-w-[1180px] mx-auto px-4 sm:px-6 py-5">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm" style={{ color: "#6B7B78" }}>
             {isPending ? (
               <span className="animate-pulse">กำลังโหลด...</span>
             ) : (
               <>
-                พบ <span className="font-semibold text-river">{prompts.length}</span> พรอมต์
+                พบ <span className="font-semibold" style={{ color: "#0E9E6E" }}>{prompts.length}</span> พรอมต์
               </>
             )}
           </p>
         </div>
 
-        {/* Grid */}
         <div
-          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 transition-opacity ${isPending ? "opacity-50" : "opacity-100"}`}
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity ${isPending ? "opacity-50" : "opacity-100"}`}
         >
           <PromptGrid prompts={prompts} onPromptClick={setSelectedId} />
         </div>
       </main>
 
-      {/* Modal */}
       {selectedId && (
         <PromptModal
           promptId={selectedId}

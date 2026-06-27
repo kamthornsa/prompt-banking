@@ -1,43 +1,62 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Design tokens — สายน้ำ AIPACK */
-  --color-river:        #0E5C53;
-  --color-river-light:  #1a7a6e;
-  --color-river-dark:   #094840;
-  --color-gold:         #C18C2A;
-  --color-gold-light:   #e0aa44;
-  --color-paper:        #F6F0DF;
-  --color-paper-dark:   #EDE4CC;
+  /* === Brand Colors === */
+  --color-river:        #0E9E6E;   /* primary brand green (prototype: #0E9E6E) */
+  --color-river-light:  #17c284;
+  --color-river-dark:   #0A6B4D;
 
-  /* Tag colors */
-  --color-rl:           #2563eb; /* RL — ฟ้า */
-  --color-rl-bg:        #dbeafe;
-  --color-ct:           #b45309; /* CT — น้ำตาลอำพัน */
-  --color-ct-bg:        #fef3c7;
-  --color-both:         #7c3aed; /* RL+CT — ม่วง */
-  --color-both-bg:      #ede9fe;
+  --color-gold:         #C58A1F;
+  --color-gold-light:   #E0A23B;
 
-  /* Stage colors (สายน้ำ) */
-  --color-stage-design:     #0369a1;
-  --color-stage-material:   #0891b2;
-  --color-stage-facilitate: #0d9488;
-  --color-stage-assess:     #65a30d;
-  --color-stage-reflect:    #d97706;
+  /* === Surface & Background === */
+  --color-paper:        #F6F5F0;   /* page background */
+  --color-paper-dark:   #E7E3D9;   /* borders / dividers */
+  --color-surface:      #FFFFFF;   /* card background */
 
-  /* Typography */
+  /* === Text === */
+  --color-ink:          #18302D;   /* primary text */
+  --color-soft:         #6B7B78;   /* secondary text */
+  --color-faint:        #9AA6A3;   /* subtle / placeholder */
+
+  /* === Borders === */
+  --color-line:         #E7E3D9;
+  --color-line2:        #F0ECE2;
+
+  /* === Skill Tag Colors === */
+  --color-rl:           #246F95;
+  --color-rl-bg:        #E5F0F7;
+  --color-ct:           #B5772A;
+  --color-ct-bg:        #FBEFE0;
+  --color-both:         #6A57C2;
+  --color-both-bg:      #EFEAFA;
+
+  /* === Stage Colors === */
+  --color-stage-design:     #2E83A6;
+  --color-stage-design-bg:  #E5F0F7;
+  --color-stage-material:   #1AA0A0;
+  --color-stage-material-bg:#E1F4F4;
+  --color-stage-facilitate: #0E9E6E;
+  --color-stage-facilitate-bg:#E2F4EC;
+  --color-stage-assess:     #B5772A;
+  --color-stage-assess-bg:  #FBEFE0;
+  --color-stage-reflect:    #B54B2C;
+  --color-stage-reflect-bg: #FBE9E2;
+
+  /* === Typography === */
   --font-sans:  var(--font-sans);
   --font-serif: var(--font-serif);
 }
 
 body {
-  font-family: var(--font-sans), "Noto Sans Thai", sans-serif;
+  font-family: var(--font-sans), "IBM Plex Sans Thai", sans-serif;
   background-color: var(--color-paper);
+  color: var(--color-ink);
 }
 
 /* Highlight ตัวแปร [xxx] ในเนื้อหาพรอมต์ */
 .prompt-variable {
-  background-color: color-mix(in srgb, var(--color-gold) 25%, transparent);
+  background-color: color-mix(in srgb, var(--color-gold) 22%, transparent);
   border-radius: 3px;
   padding: 0 3px;
   font-weight: 600;
