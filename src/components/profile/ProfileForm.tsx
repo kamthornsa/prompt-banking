@@ -14,6 +14,7 @@ interface ProfileFormProps {
 
 const ALL_SUBJECTS = Object.values(TeachingSubject);
 const SLUG_REGEX = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 export function ProfileForm({ profile }: ProfileFormProps) {
   const router = useRouter();
@@ -155,7 +156,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           <p className="text-xs" style={{ color: "#9AA6A3" }}>
             โปรไฟล์สาธารณะ:{" "}
             <a
-              href={`/u/${slug}`}
+              href={`${basePath}/u/${slug}`}
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium hover:underline"

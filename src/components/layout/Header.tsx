@@ -214,7 +214,7 @@ function UserDropdown({ user }: {
           </Link>
           <div style={{ height: 1, background: "#E7E3D9", margin: "4px 0" }} />
           <button
-            onClick={() => signOut({ callbackUrl: "/" })}
+            onClick={() => signOut({ callbackUrl: window.location.href })}
             className="w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-red-50"
             style={{ color: "#B54B2C" }}
           >
