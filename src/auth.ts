@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { SEED_ADMIN_EMAILS } from "@/lib/constants";
 import { Role, AuthorRequestStatus } from "@prisma/client";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 // ขยาย Session type ให้มี id, role, slug
 declare module "next-auth" {
   interface Session {
@@ -24,6 +26,7 @@ declare module "next-auth" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  basePath: `${basePath}/api/auth`,
   adapter: PrismaAdapter(prisma),
   trustHost: true,
 
