@@ -4,7 +4,6 @@ import {
   PrismaClient,
   Role,
   Stage,
-  Subject,
   SkillFocus,
   Grade,
 } from "@prisma/client";

@@ -1,15 +1,16 @@
 import Image from "next/image";
 
-const LOGOS = [
-  { src: "/logos/logo-mhesi.png", alt: "กระทรวงการอุดมศึกษา วิทยาศาสตร์ วิจัยและนวัตกรรม (อว.)", height: 56 },
-  { src: "/logos/logo-bpt.png", alt: "หน่วยบริหารจัดการทุนด้านการพัฒนาพื้นที่ (บพท.)", height: 48 },
-  { src: "/logos/logo-sksv.png", alt: "สกลว", height: 52 },
-  { src: "/logos/logo-kalasin-uni.png", alt: "มหาวิทยาลัยกาฬสินธุ์", height: 56 },
-  { src: "/logos/logo-craft-ai.png", alt: "Kalasin CRAFT AI", height: 52 },
-  { src: "/logos/logo-saturday-school.png", alt: "Saturday School", height: 52 },
-  { src: "/logos/logo-tdri.png", alt: "TDRI — Thailand Development Research Institute", height: 40 },
-];
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
+const LOGOS = [
+  { src: `${BASE_PATH}/logos/logo-mhesi.png`, alt: "กระทรวงการอุดมศึกษา วิทยาศาสตร์ วิจัยและนวัตกรรม (อว.)", height: 56 },
+  { src: `${BASE_PATH}/logos/logo-bpt.png`, alt: "หน่วยบริหารจัดการทุนด้านการพัฒนาพื้นที่ (บพท.)", height: 48 },
+  { src: `${BASE_PATH}/logos/logo-sksv.png`, alt: "สกลว", height: 52 },
+  { src: `${BASE_PATH}/logos/logo-kalasin-uni.png`, alt: "มหาวิทยาลัยกาฬสินธุ์", height: 56 },
+  { src: `${BASE_PATH}/logos/logo-craft-ai.png`, alt: "Kalasin CRAFT AI", height: 52 },
+  { src: `${BASE_PATH}/logos/logo-saturday-school.png`, alt: "Saturday School", height: 52 },
+  { src: `${BASE_PATH}/logos/logo-tdri.png`, alt: "TDRI — Thailand Development Research Institute", height: 40 },
+];
 export function Footer() {
   return (
     <footer className="bg-white border-t border-gray-200 mt-auto">
