@@ -1,7 +1,9 @@
+export const dynamic = "force-dynamic";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PromptBrowser } from "@/components/prompts/PromptBrowser";
 import { fetchPrompts } from "@/actions/prompts";
+
 
 export default async function HomePage() {
   const initialPrompts = await fetchPrompts({ sort: "newest" });
