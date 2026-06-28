@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
+const isProd = process.env.NODE_ENV === "production";
+
 const nextConfig: NextConfig = {
-  // basePath: "/pb",
+  basePath: isProd ? "/prompt-banking" : "",
   images: {
     remotePatterns: [
       {
