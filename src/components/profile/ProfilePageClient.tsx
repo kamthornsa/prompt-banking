@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { Role } from "@prisma/client";
 import { PublicProfile } from "@/actions/profile";
 import { TEACHING_SUBJECT_LABELS } from "@/lib/constants";
 import { PromptModal } from "@/components/prompts/PromptModal";
@@ -37,7 +36,7 @@ type Tab = "prompts" | "showcases";
 export function ProfilePageClient({ profile }: ProfilePageClientProps) {
   const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("prompts");
-  const isAuthorOrAdmin = profile.role === Role.AUTHOR || profile.role === Role.ADMIN;
+  const isAuthorOrAdmin = profile.role === "AUTHOR" || profile.role === "ADMIN";
 
   return (
     <>
