@@ -5,6 +5,7 @@ import { useState } from "react";
 import { PublicProfile } from "@/actions/profile";
 import { TEACHING_SUBJECT_LABELS } from "@/lib/constants";
 import { PromptModal } from "@/components/prompts/PromptModal";
+import { Role } from "@prisma/client";
 
 const STAGE_LABELS: Record<string, string> = {
   DESIGN: "ออกแบบ",
