@@ -96,8 +96,7 @@ export function Header() {
             </div>
           ) : (
             <button
-              onClick={() => signIn("google", { callbackUrl: "/" })}
-              className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full transition-all"
+              onClick={() => signIn("google", { callbackUrl: window.location.href })}              className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full transition-all"
               style={{ background: "#0E9E6E", color: "#fff", boxShadow: "0 2px 8px rgba(14,158,110,0.25)" }}
             >
               <GoogleIcon />
