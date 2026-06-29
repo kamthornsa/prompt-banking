@@ -55,7 +55,9 @@ const GRADE_OPTIONS: { value: Grade; label: string }[] = [
 const inputStyle: React.CSSProperties = {
   display: "block",
   width: "100%",
-  border: "1px solid #E7E3D9",
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#E7E3D9",
   borderRadius: 12,
   padding: "10px 14px",
   fontSize: 14,

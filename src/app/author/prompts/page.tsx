@@ -4,6 +4,8 @@ import { PromptStatus, Stage } from "@prisma/client";
 import Link from "next/link";
 import { AuthorTabBar } from "../AuthorTabBar";
 
+const PAGE_SIZE = 10;
+
 const STAGE_LABELS: Record<Stage, string> = {
   DESIGN: "ออกแบบ",
   MATERIAL: "สร้างสื่อ",
@@ -21,17 +23,44 @@ const STAGE_COLORS: Record<Stage, string> = {
 };
 
 const STATUS_CONFIG: Record<PromptStatus, { label: string; color: string; bg: string }> = {
-  PENDING:   { label: "รออนุมัติ",   color: "#B5772A", bg: "#FBEFE0" },
-  PUBLISHED: { label: "เผยแพร่",     color: "#0A6B4D", bg: "#E2F4EC" },
-  REJECTED:  { label: "ไม่อนุมัติ",  color: "#B54B2C", bg: "#FDEEE9" },
+  PENDING:   { label: "รออนุมัติ (เก่า)",   color: "#B5772A", bg: "#FBEFE0" },
+  PUBLISHED: { label: "เผยแพร่",             color: "#0A6B4D", bg: "#E2F4EC" },
+  REJECTED:  { label: "ถูกซ่อน",            color: "#B54B2C", bg: "#FDEEE9" },
 };
 
-export default async function AuthorPromptsPage() {
-  const prompts = await fetchAuthorPrompts();
+export default async function AuthorPromptsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; page?: string }>;
+}) {
+  const { q = "", page = "1" } = await searchParams;
+  const currentPage = Math.max(1, parseInt(page, 10) || 1);
 
-  const total     = prompts.length;
-  const published = prompts.filter((p) => p.status === PromptStatus.PUBLISHED).length;
-  const pending   = prompts.filter((p) => p.status === PromptStatus.PENDING).length;
+  const allPrompts = await fetchAuthorPrompts();
+
+  // Stats always based on all prompts
+  const total     = allPrompts.length;
+  const published = allPrompts.filter((p) => p.status === PromptStatus.PUBLISHED).length;
+  const hidden    = allPrompts.filter((p) => p.status === PromptStatus.REJECTED).length;
+
+  // Filter by search query
+  const query = q.trim().toLowerCase();
+  const filtered = query
+    ? allPrompts.filter((p) => p.title.toLowerCase().includes(query))
+    : allPrompts;
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage   = Math.min(currentPage, totalPages);
+  const paged      = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  function pageUrl(p: number) {
+    const params = new URLSearchParams();
+    if (query) params.set("q", q);
+    if (p > 1) params.set("page", String(p));
+    const qs = params.toString();
+    return `/author/prompts${qs ? `?${qs}` : ""}`;
+  }
 
   return (
     <div className="space-y-6">
@@ -44,7 +73,7 @@ export default async function AuthorPromptsPage() {
             พรอมต์ของฉัน
           </h1>
           <p className="mt-1 text-sm" style={{ color: "#6B7B78" }}>
-            สร้างและจัดการพรอมต์ — พรอมต์ใหม่จะรอแอดมินอนุมัติก่อนเผยแพร่
+            สร้างและจัดการพรอมต์ — พรอมต์ใหม่จะเผยแพร่ทันที แอดมินสามารถซ่อนได้ในภายหลัง
           </p>
         </div>
         <Link
@@ -61,14 +90,71 @@ export default async function AuthorPromptsPage() {
       <div className="grid grid-cols-3 gap-4">
         <StatCard label="พรอมต์ทั้งหมด" value={total} />
         <StatCard label="เผยแพร่แล้ว"  value={published} />
-        <StatCard label="รออนุมัติ"    value={pending}  valueColor="#B5772A" />
+        <StatCard label="ถูกซ่อน"       value={hidden}   valueColor="#B54B2C" />
       </div>
+
+      {/* Search bar */}
+      <form method="GET" action="/author/prompts" className="flex gap-2">
+        <div className="relative flex-1 max-w-md">
+          <span
+            className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: "#9AA6A3" }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            name="q"
+            defaultValue={q}
+            placeholder="ค้นหาชื่อพรอมต์…"
+            style={{
+              width: "100%", paddingLeft: 36, paddingRight: 12, paddingTop: 9, paddingBottom: 9,
+              border: "1px solid #E7E3D9", borderRadius: 10, fontSize: 14, outline: "none",
+              background: "#fff", color: "#18302D",
+            }}
+          />
+        </div>
+        <button
+          type="submit"
+          style={{
+            background: "#0E9E6E", color: "#fff", borderRadius: 10, padding: "9px 18px",
+            fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer",
+          }}
+        >
+          ค้นหา
+        </button>
+        {query && (
+          <Link
+            href="/author/prompts"
+            style={{
+              border: "1px solid #E7E3D9", color: "#6B7B78", borderRadius: 10, padding: "9px 14px",
+              fontSize: 14, fontWeight: 500, textDecoration: "none", display: "inline-flex",
+              alignItems: "center",
+            }}
+          >
+            ล้าง
+          </Link>
+        )}
+      </form>
+
+      {/* Search result count */}
+      {query && (
+        <p className="text-sm" style={{ color: "#6B7B78" }}>
+          พบ <strong style={{ color: "#18302D" }}>{filtered.length}</strong> รายการ
+          สำหรับ &quot;<strong style={{ color: "#18302D" }}>{q}</strong>&quot;
+        </p>
+      )}
 
       {/* Table */}
       <div style={{ background: "#fff", border: "1px solid #E7E3D9", borderRadius: 18, overflow: "hidden" }}>
-        {prompts.length === 0 ? (
+        {paged.length === 0 ? (
           <p className="text-center py-14 text-sm" style={{ color: "#9AA6A3" }}>
-            ยังไม่มีพรอมต์ — กด &quot;+ สร้างพรอมต์ใหม่&quot; เพื่อเริ่ม
+            {query
+              ? `ไม่พบพรอมต์ที่ตรงกับ "${q}"`
+              : `ยังไม่มีพรอมต์ — กด "+ สร้างพรอมต์ใหม่" เพื่อเริ่ม`}
           </p>
         ) : (
           <table className="w-full text-sm">
@@ -83,12 +169,12 @@ export default async function AuthorPromptsPage() {
               </tr>
             </thead>
             <tbody>
-              {prompts.map((p, i) => {
+              {paged.map((p, i) => {
                 const st = STATUS_CONFIG[p.status];
                 return (
                   <tr
                     key={p.id}
-                    style={{ borderBottom: i < prompts.length - 1 ? "1px solid #F0ECE2" : "none" }}
+                    style={{ borderBottom: i < paged.length - 1 ? "1px solid #F0ECE2" : "none" }}
                   >
                     <td className="px-5 py-3.5 font-medium max-w-[260px] truncate" style={{ color: "#18302D" }}>
                       {p.title}
@@ -138,6 +224,28 @@ export default async function AuthorPromptsPage() {
         )}
       </div>
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-1">
+          <p className="text-sm" style={{ color: "#9AA6A3" }}>
+            แสดง {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)}{" "}
+            จาก {filtered.length} รายการ
+          </p>
+          <div className="flex items-center gap-1">
+            <PaginationLink href={pageUrl(safePage - 1)} disabled={safePage <= 1} label="←" />
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <PaginationLink
+                key={p}
+                href={pageUrl(p)}
+                active={p === safePage}
+                label={String(p)}
+              />
+            ))}
+            <PaginationLink href={pageUrl(safePage + 1)} disabled={safePage >= totalPages} label="→" />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
@@ -162,6 +270,37 @@ function StatCard({ label, value, valueColor = "#18302D" }: {
         {value}
       </p>
     </div>
+  );
+}
+
+function PaginationLink({
+  href, label, active = false, disabled = false,
+}: { href: string; label: string; active?: boolean; disabled?: boolean }) {
+  if (disabled) {
+    return (
+      <span
+        style={{
+          padding: "6px 11px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+          color: "#C0C8C6", border: "1px solid #E7E3D9", display: "inline-block", lineHeight: 1,
+        }}
+      >
+        {label}
+      </span>
+    );
+  }
+  return (
+    <Link
+      href={href}
+      style={{
+        padding: "6px 11px", borderRadius: 8, fontSize: 13, fontWeight: active ? 700 : 500,
+        color: active ? "#fff" : "#18302D",
+        background: active ? "#0E9E6E" : "transparent",
+        border: `1px solid ${active ? "#0E9E6E" : "#E7E3D9"}`,
+        textDecoration: "none", display: "inline-block", lineHeight: 1,
+      }}
+    >
+      {label}
+    </Link>
   );
 }
 

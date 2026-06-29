@@ -30,29 +30,21 @@ export function Header() {
     >
       <div className="max-w-[1180px] mx-auto px-6 py-[13px] flex items-center gap-5">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-[11px] shrink-0">
-          <span
-            className="flex items-center justify-center shrink-0"
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 11,
-              background: "#0E9E6E",
-              boxShadow: "0 4px 10px rgba(14,158,110,0.28)",
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-              <circle cx="9" cy="9" r="7" stroke="white" strokeWidth="2.5"
-                strokeDasharray="22 44" strokeLinecap="round" />
-              <circle cx="9" cy="9" r="3" fill="white" />
-            </svg>
-          </span>
+        <Link href="/" className="flex items-center gap-[10px] shrink-0">
+          <Image
+            src="/logos/logo.png"
+            alt="CARIA Logo"
+            width={38}
+            height={38}
+            className="shrink-0"
+            style={{ borderRadius: 8 }}
+          />
           <span className="flex flex-col items-start leading-none">
-            <span className="font-serif font-bold text-[18px] tracking-[0.2px]" style={{ color: "#18302D" }}>
-              CARIA
+            <span className="font-serif font-bold text-[16px] tracking-[0.2px]" style={{ color: "#18302D" }}>
+              CARIA Prompt Banking
             </span>
-            <span className="text-[11px] font-medium" style={{ color: "#9AA6A3" }}>
-              ธนาคารพรอมต์ครู
+            <span className="text-[13px] font-medium" style={{ color: "#9AA6A3" }}>
+              คลังพรอมต์พร้อมใช้
             </span>
           </span>
         </Link>

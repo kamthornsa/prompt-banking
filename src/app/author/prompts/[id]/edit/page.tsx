@@ -52,16 +52,6 @@ export default async function AuthorEditPromptPage({ params }: Props) {
         </h1>
       </div>
 
-      {prompt.status === "PUBLISHED" && (
-        <div
-          className="flex items-start gap-2.5 px-4 py-3 rounded-xl text-sm"
-          style={{ background: "#FFFBEB", border: "1px solid #F5D87A", color: "#92650A" }}
-        >
-          <span className="text-base shrink-0">⚠️</span>
-          <span>พรอมต์นี้เผยแพร่อยู่แล้ว การแก้ไขจะทำให้กลับสู่สถานะ <strong>รออนุมัติ</strong> อีกครั้ง</span>
-        </div>
-      )}
-
       <PromptForm
         promptId={prompt.id}
         redirectTo="/author/prompts"

@@ -204,11 +204,10 @@ async function requireAuthorOrAdmin() {
 }
 
 export async function createPrompt(data: z.infer<typeof PromptSchema>) {
-  const { userId, role } = await requireAuthorOrAdmin();
+  const { userId } = await requireAuthorOrAdmin();
   const parsed = PromptSchema.parse(data);
-  const status = role === Role.ADMIN ? PromptStatus.PUBLISHED : PromptStatus.PENDING;
   await prisma.prompt.create({
-    data: { ...parsed, createdById: userId, status },
+    data: { ...parsed, createdById: userId, status: PromptStatus.PUBLISHED },
   });
   revalidatePath("/");
   revalidatePath("/admin/prompts");
@@ -223,10 +222,8 @@ export async function updatePrompt(id: string, data: z.infer<typeof PromptSchema
     const existing = await prisma.prompt.findUnique({ where: { id }, select: { createdById: true } });
     if (!existing) throw new Error("ไม่พบพรอมต์");
     if (existing.createdById !== userId) throw new Error("Forbidden");
-    await prisma.prompt.update({ where: { id }, data: { ...parsed, status: PromptStatus.PENDING } });
-  } else {
-    await prisma.prompt.update({ where: { id }, data: parsed });
   }
+  await prisma.prompt.update({ where: { id }, data: parsed });
 
   revalidatePath("/");
   revalidatePath("/admin/prompts");

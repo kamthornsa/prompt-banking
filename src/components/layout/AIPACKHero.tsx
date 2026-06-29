@@ -60,7 +60,7 @@ export function AIPACKHero({ selectedStage, onStageChange, promptCounts }: AIPAC
             borderRadius: 999,
           }}
         >
-          Kalasin CRAFT AI · ม.1–3
+          Kalasin CRAFT AI  
         </span>
 
         {/* Headline */}
@@ -68,8 +68,8 @@ export function AIPACKHero({ selectedStage, onStageChange, promptCounts }: AIPAC
           className="font-serif font-bold text-[34px] sm:text-[38px] leading-[1.25] mt-4 max-w-[640px] tracking-[-0.3px]"
           style={{ color: "#18302D" }}
         >
-          พรอมต์ดี ๆ สำหรับห้องเรียน<br />
-          หยิบไปใช้กับ AI ได้ทันที
+          Classroom Prompt Banking<br />
+          สำหรับโครงการ Kalasin CRAFT AI 
         </h1>
 
         {/* Subtitle */}
