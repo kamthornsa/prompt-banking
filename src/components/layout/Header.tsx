@@ -9,6 +9,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { requestAuthorRole } from "@/actions/admin";
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 export function Header() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
@@ -32,7 +34,7 @@ export function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-[10px] shrink-0">
           <Image
-            src="/logos/logo.png"
+            src={`${BASE_PATH}/logos/logo.png`}
             alt="CARIA Logo"
             width={38}
             height={38}
